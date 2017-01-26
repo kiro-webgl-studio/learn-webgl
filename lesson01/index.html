@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>WebGl</title>
+</head>
+
+<body>
+    <script type="text/javascript" src="../externals/mat.js"></script>
+    <script type="text/javascript" src="../externals/utils.js"></script>
+
+    <script id="shader-fs" type="x-shader/x-fragment">
+        precision mediump float; 
+        void main(void) { 
+            gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0); 
+        }
+    </script>
+
+    <script id="shader-vs" type="x-shader/x-vertex">
+        attribute vec3 aVertexPosition; 
+        uniform mat4 uMVMatrix; 
+        uniform mat4 uPMatrix; 
+        void main(void) { 
+            gl_Position = uPMatrix * uMVMatrix * vec4(aVertexPosition, 1.0); 
+        }
+    </script>
+    <script>
+        window.onload = function () {
+            setup();
+            draw();
+        }
+
+        let context, program;
+        let utils = window._Utils;
+
+        function setup() {
+            let canvas = utils.createCanvasWithFallback(800, 640, 'Not support');
+            let root = document.querySelector('body');
+
+            context = utils.getWebGLContextAfterCheck(canvas, () => {
+                console.error('oops');
+            });
+
+            context.viewportWidth = 800;
+            context.viewportHeight = 640;
+            context.clearColor(0.0, 0.0, 0.0, 1.0);
+            context.enable(context.DEPTH_TEST);
+
+            let vtShader = utils.getShaderById('#shader-vs', 'vertex');
+            let fsShader = utils.getShaderById('#shader-fs', 'fragment');
+
+            root.appendChild(canvas);
+
+            program = utils.createProgramWithLimitShader(vtShader, fsShader);
+        }
+
+        function draw() {
+            let triangleVec = [
+                0.0, 1.0, 0.0, 
+                -1.0, -1.0, 0.0,
+                1.0, -1.0, 0.0
+            ];
+            let squareVec = [
+                1.0, 1.0, 0.0, 
+                -1.0, 1.0, 0.0,
+                1.0, -1.0, 0.0, 
+                -1.0, -1.0, 0.0
+            ]
+            let triangleBuffer = utils.createBuffer(triangleVec, 3, 3, 'static');
+            let squareBuffer = utils.createBuffer(squareVec, 3, 4, 'static')
+            let mvMatrix = mat4.create();
+            let pMatrix = mat4.create();
+
+            context.uniformMatrix4fv(program.pMatrixUniform, false, pMatrix);
+            context.uniformMatrix4fv(program.mvMatrixUniform, false, mvMatrix);
+
+            context.viewport(0, 0, context.viewportWidth, context.viewportHeight);
+            context.clear(context.COLOR_BUFFER_BIT | context.DEPTH_BUFFER_BIT);
+
+            mat4.perspective(45, context.viewportWidth / context.viewportHeight, 0.1, 100.0, pMatrix);
+
+            mat4.identity(mvMatrix);
+
+            //triangle
+            mat4.translate(mvMatrix, [-1.5, 0.0, -7.0]);
+            context.bindBuffer(context.ARRAY_BUFFER, triangleBuffer);
+            context.vertexAttribPointer(program.vertexPositionAttribute, triangleBuffer.itemSize,
+                context.FLOAT,
+                false, 0, 0);
+            context.uniformMatrix4fv(program.pMatrixUniform, false, pMatrix);
+            context.uniformMatrix4fv(program.mvMatrixUniform, false, mvMatrix);
+            context.drawArrays(context.TRIANGLES, 0, triangleBuffer.numItems);
+
+            //square
+            mat4.translate(mvMatrix, [3.0, 0.0, 0.0]);
+            context.bindBuffer(context.ARRAY_BUFFER, squareBuffer);
+            context.vertexAttribPointer(program.vertexPositionAttribute, squareBuffer.itemSize,
+                context.FLOAT,
+                false, 0, 0);
+            context.uniformMatrix4fv(program.pMatrixUniform, false, pMatrix);
+            context.uniformMatrix4fv(program.mvMatrixUniform, false, mvMatrix);
+            context.drawArrays(context.TRIANGLE_STRIP, 0, squareBuffer.numItems);
+        }
+    </script>
+</body>
+
+</html>
