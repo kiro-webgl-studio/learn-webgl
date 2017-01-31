@@ -9,12 +9,30 @@
 <body>
     <script type="text/javascript" src="../externals/mat.js"></script>
     <script type="text/javascript" src="../externals/utils.js"></script>
+
     <script id="shader-fs" type="x-shader/x-fragment">
-        precision mediump float; void main(void) { gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0); }
+        precision mediump float;
+
+        varying vec4 vColor;
+
+        void main(void) {
+            gl_FragColor = vColor;
+        }
     </script>
+
     <script id="shader-vs" type="x-shader/x-vertex">
-        attribute vec3 aVertexPosition; uniform mat4 uMVMatrix; uniform mat4 uPMatrix; void main(void) { gl_Position = uPMatrix *
-        uMVMatrix * vec4(aVertexPosition, 1.0); }
+        attribute vec3 aVertexPosition;
+        attribute vec4 aVertexColor;
+
+        uniform mat4 uMVMatrix;
+        uniform mat4 uPMatrix;
+
+        varying vec4 vColor;
+
+        void main(void) {
+            gl_Position = uPMatrix * uMVMatrix * vec4(aVertexPosition, 1.0);
+            vColor = aVertexColor;
+        }
     </script>
     <script>
         window.onload = function () {
@@ -56,13 +74,28 @@
                 utils
             } = env;
             let triangleVec = [
-                0.0, 1.0, 0.0, -1.0, -1.0, 0.0,
+                0.0, 1.0, 0.0, 
+                -1.0, -1.0, 0.0,
                 1.0, -1.0, 0.0
             ];
             let squareVec = [
-                1.0, 1.0, 0.0, -1.0, 1.0, 0.0,
-                1.0, -1.0, 0.0, -1.0, -1.0, 0.0
+                1.0, 1.0, 0.0, 
+                -1.0, 1.0, 0.0,
+                1.0, -1.0, 0.0, 
+                -1.0, -1.0, 0.0
             ]
+            let triangleColorVec = [
+                1.0, 0.0, 0.0, 1.0,
+                0.0, 1.0, 0.0, 1.0,
+                0.0, 0.0, 1.0, 1.0
+            ]
+            let squareColorVec = [
+                0.5, 0.5, 1.0, 1.0,
+                0.5, 0.5, 1.0, 1.0,
+                0.5, 0.5, 1.0, 1.0,
+                0.5, 0.5, 1.0, 1.0
+            ];
+
             let triangleBuffer = utils.createBuffer(triangleVec);
             triangleBuffer.size = 3;
             triangleBuffer.number = 3;
@@ -71,16 +104,26 @@
             squareBuffer.size = 3;
             squareBuffer.number = 4;
 
-            let mvMatrix = mat4.create();
-            let mvMatrixUniform = context.getUniformLocation(program, "uMVMatrix");
-            context.uniformMatrix4fv(mvMatrixUniform, false, mvMatrix);
-            
-            let pMatrix = mat4.create();
-            let pMatrixUniform = context.getUniformLocation(program, "uPMatrix");
-            context.uniformMatrix4fv(pMatrixUniform, false, pMatrix);
+            let triangleColorBuffer = utils.createBuffer(triangleColorVec);
+            triangleColorBuffer.size = 4;
+            triangleColorBuffer.number = 3;
 
-            let vertexAttr = context.getAttribLocation(program, "aVertexPosition");
-            context.enableVertexAttribArray(vertexAttr);
+            let squareColorBuffer = utils.createBuffer(squareColorVec);
+            squareColorBuffer.size = 4;
+            squareColorBuffer.number = 4;
+
+            let mvMatrix = mat4.create();
+            let pMatrix = mat4.create();
+
+            let pMatrixUniform = context.getUniformLocation(program, 'uPMatrix');
+            let mvMatrixUniform = context.getUniformLocation(program, 'uMVMatrix')
+            context.uniformMatrix4fv(pMatrixUniform, false, pMatrix);
+            context.uniformMatrix4fv(mvMatrixUniform, false, mvMatrix);
+
+            let vertexPosAttr = context.getAttribLocation(program, "aVertexPosition");
+            context.enableVertexAttribArray(vertexPosAttr);
+            let vertexColAttr = context.getAttribLocation(program, "aVertexColor");
+            context.enableVertexAttribArray(vertexColAttr);
 
             context.viewport(0, 0, context.viewportWidth, context.viewportHeight);
             context.clear(context.COLOR_BUFFER_BIT | context.DEPTH_BUFFER_BIT);
@@ -92,9 +135,13 @@
             //triangle
             mat4.translate(mvMatrix, [-1.5, 0.0, -7.0]);
             context.bindBuffer(context.ARRAY_BUFFER, triangleBuffer);
-            context.vertexAttribPointer(program.vertexPositionAttribute, triangleBuffer.itemSize,
+            context.vertexAttribPointer(vertexPosAttr, triangleBuffer.itemSize,
                 context.FLOAT,
                 false, 0, 0);
+
+            context.bindBuffer(context.ARRAY_BUFFER, triangleColorBuffer);
+            context.vertexAttribPointer(vertexColAttr, triangleColorBuffer.itemSize, context.FLOAT, false, 0, 0);
+
             context.uniformMatrix4fv(pMatrixUniform, false, pMatrix);
             context.uniformMatrix4fv(mvMatrixUniform, false, mvMatrix);
             context.drawArrays(context.TRIANGLES, 0, triangleBuffer.numItems);
@@ -102,9 +149,13 @@
             //square
             mat4.translate(mvMatrix, [3.0, 0.0, 0.0]);
             context.bindBuffer(context.ARRAY_BUFFER, squareBuffer);
-            context.vertexAttribPointer(program.vertexPositionAttribute, squareBuffer.itemSize,
+            context.vertexAttribPointer(vertexPosAttr, squareBuffer.itemSize,
                 context.FLOAT,
                 false, 0, 0);
+
+            context.bindBuffer(context.ARRAY_BUFFER, squareColorBuffer);
+            context.vertexAttribPointer(vertexColAttr, squareColorBuffer.itemSize, context.FLOAT, false, 0, 0);
+
             context.uniformMatrix4fv(pMatrixUniform, false, pMatrix);
             context.uniformMatrix4fv(mvMatrixUniform, false, mvMatrix);
             context.drawArrays(context.TRIANGLE_STRIP, 0, squareBuffer.numItems);
