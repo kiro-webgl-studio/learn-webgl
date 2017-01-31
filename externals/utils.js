@@ -30,7 +30,6 @@
         type = `${type}_shader`.toUpperCase();
 
         let gl = utils.gl;
-        if (!gl) return;
 
         if (gl[type]) {
             shader = gl.createShader(gl[type]);
@@ -40,8 +39,6 @@
 
         _getShaderStatusWhenError(shader, 'compile', () => {
             console.log(gl.getShaderInfoLog(shader));
-            //gl.getShaderInfoLog(shader)
-            console.error('[Error]');
         })
 
         return shader
@@ -49,7 +46,6 @@
 
     function createProgramWithLimitShader(...shaders) {
         let gl = this.gl;
-        if (!gl) return;
 
         let shaderProgram = gl.createProgram();
 
@@ -64,12 +60,6 @@
 
         gl.useProgram(shaderProgram);
 
-        shaderProgram.vertexPositionAttribute = gl.getAttribLocation(shaderProgram, "aVertexPosition");
-        gl.enableVertexAttribArray(shaderProgram.vertexPositionAttribute);
-
-        shaderProgram.pMatrixUniform = gl.getUniformLocation(shaderProgram, "uPMatrix");
-        shaderProgram.mvMatrixUniform = gl.getUniformLocation(shaderProgram, "uMVMatrix");
-
         return shaderProgram;
     }
 
@@ -78,7 +68,6 @@
         type = `${type}_status`.toUpperCase();
 
         let gl = utils.gl;
-        if (!gl) return;
 
         if (!gl[type]) {
             return;
@@ -95,7 +84,6 @@
         type = `${type}_status`.toUpperCase();
 
         let gl = utils.gl;
-        if (!gl) return;
 
         if (!gl[type]) {
             return;
@@ -107,20 +95,32 @@
         }
     }
 
-    function createBuffer(bufferArray, size, number, type) {
+    function createBuffer(bufferArray, type = 'static') {
         let gl = this.gl;
-        if (!gl) return;
-        
+
         let _buffer = gl.createBuffer();
         type = `${type}_draw`.toUpperCase();
 
         gl.bindBuffer(gl.ARRAY_BUFFER, _buffer);
         gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(bufferArray), gl[type]);
 
-        _buffer.itemSize = size;
-        _buffer.numItems = number;
-        
+        _defineProperty(_buffer, 'size', 'itemSize', 0);
+        _defineProperty(_buffer, 'number', 'numItems', 0);
         return _buffer;
+    }
+
+    function _defineProperty(target, name, property, defaultValue) {
+        let obj = {};
+        target[`m_${name}`] = defaultValue;
+        obj.get = function () {
+            return target[`m_${name}`];
+        }
+        obj.set = function (val) {
+            target[`m_${name}`] = val;
+            target[property] = val;
+        }
+
+        Object.defineProperty(target, name, obj);
     }
 
     let utils = {
