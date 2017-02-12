@@ -96,21 +96,10 @@
                 0.5, 0.5, 1.0, 1.0
             ];
 
-            let triangleBuffer = utils.createBuffer(triangleVec);
-            triangleBuffer.size = 3;
-            triangleBuffer.number = 3;
-
-            let squareBuffer = utils.createBuffer(squareVec);
-            squareBuffer.size = 3;
-            squareBuffer.number = 4;
-
-            let triangleColorBuffer = utils.createBuffer(triangleColorVec);
-            triangleColorBuffer.size = 4;
-            triangleColorBuffer.number = 3;
-
-            let squareColorBuffer = utils.createBuffer(squareColorVec);
-            squareColorBuffer.size = 4;
-            squareColorBuffer.number = 4;
+            let triangleBuffer = utils.createBuffer(triangleVec, 3 , 3);
+            let squareBuffer = utils.createBuffer(squareVec, 3 , 4);
+            let triangleColorBuffer = utils.createBuffer(triangleColorVec,4,3);
+            let squareColorBuffer = utils.createBuffer(squareColorVec,4,4);
 
             let mvMatrix = mat4.create();
             let pMatrix = mat4.create();
@@ -144,7 +133,7 @@
 
             context.uniformMatrix4fv(pMatrixUniform, false, pMatrix);
             context.uniformMatrix4fv(mvMatrixUniform, false, mvMatrix);
-            context.drawArrays(context.TRIANGLES, 0, triangleBuffer.numItems);
+            context.drawArrays(context.TRIANGLES, 0, triangleBuffer.itemNum);
 
             //square
             mat4.translate(mvMatrix, [3.0, 0.0, 0.0]);
@@ -158,8 +147,9 @@
 
             context.uniformMatrix4fv(pMatrixUniform, false, pMatrix);
             context.uniformMatrix4fv(mvMatrixUniform, false, mvMatrix);
-            context.drawArrays(context.TRIANGLE_STRIP, 0, squareBuffer.numItems);
+            context.drawArrays(context.TRIANGLE_STRIP, 0, squareBuffer.itemNum);
         }
+
     </script>
 </body>
 

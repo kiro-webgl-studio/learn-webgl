@@ -95,7 +95,7 @@
         }
     }
 
-    function createBuffer(bufferArray, type = 'static') {
+    function createBuffer(bufferArray, itemSize, itemNum, type = 'static') {
         let gl = this.gl;
 
         let _buffer = gl.createBuffer();
@@ -104,23 +104,10 @@
         gl.bindBuffer(gl.ARRAY_BUFFER, _buffer);
         gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(bufferArray), gl[type]);
 
-        _defineProperty(_buffer, 'size', 'itemSize', 0);
-        _defineProperty(_buffer, 'number', 'numItems', 0);
+        _buffer.itemSize = itemSize;
+        _buffer.itemNum = itemNum;
+
         return _buffer;
-    }
-
-    function _defineProperty(target, name, property, defaultValue) {
-        let obj = {};
-        target[`m_${name}`] = defaultValue;
-        obj.get = function () {
-            return target[`m_${name}`];
-        }
-        obj.set = function (val) {
-            target[`m_${name}`] = val;
-            target[property] = val;
-        }
-
-        Object.defineProperty(target, name, obj);
     }
 
     let utils = {
